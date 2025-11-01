@@ -1,144 +1,93 @@
 # Bugbot Configuration for beshr11 repositories
 # This file configures automated issue triage, labeling, and assignment
 
-# Issue labeling rules
+# Auto-labeling rules
 labeling:
-  # Auto-label based on title/keywords
+  # Label issues based on title/content patterns
   rules:
-    - keywords: ["bug", "error", "crash", "broken", "fix"]
+    - pattern: "(?i)(bug|error|crash|exception|fail)"
       labels: ["bug", "needs-triage"]
-      severity: "medium"
-    
-    - keywords: ["feature", "enhancement", "improvement", "add"]
-      labels: ["enhancement", "feature-request"]
-      severity: "low"
-    
-    - keywords: ["security", "vulnerability", "exploit", "cve"]
-      labels: ["security", "critical"]
-      severity: "critical"
       priority: "high"
     
-    - keywords: ["performance", "slow", "optimize", "speed"]
-      labels: ["performance", "needs-investigation"]
-      severity: "medium"
+    - pattern: "(?i)(feature|enhancement|improvement|add)"
+      labels: ["enhancement", "feature-request"]
+      priority: "medium"
     
-    - keywords: ["documentation", "docs", "readme", "guide"]
+    - pattern: "(?i)(documentation|docs|readme|guide)"
       labels: ["documentation"]
-      severity: "low"
+      priority: "low"
     
-    - keywords: ["question", "help", "support", "how"]
-      labels: ["question"]
-      severity: "low"
-
-  # Auto-assign based on file paths or labels
-  assignment:
-    # Assign based on file patterns
-    paths:
-      - pattern: "netlify/**/*"
-        assignees: ["beshr11"]
-      - pattern: "*.ts"
-        assignees: ["beshr11"]
-      - pattern: "*.tsx"
-        assignees: ["beshr11"]
+    - pattern: "(?i)(security|vulnerability|exploit)"
+      labels: ["security", "priority:critical"]
+      priority: "critical"
+      assignees: ["@beshr11"]
     
-    # Assign based on labels
-    labels:
-      security:
-        assignees: ["beshr11"]
-      critical:
-        assignees: ["beshr11"]
+    - pattern: "(?i)(performance|slow|optimization)"
+      labels: ["performance"]
+      priority: "medium"
 
-# Pull Request rules
+# Auto-assignment rules
+assignment:
+  # Assign based on file paths changed in PR
+  path_rules:
+    - paths: ["netlify/**", "*.toml"]
+      assignees: ["@beshr11"]
+      labels: ["infrastructure"]
+    
+    - paths: ["**/*.ts", "**/*.tsx"]
+      labels: ["typescript"]
+    
+    - paths: ["**/*.md", "docs/**"]
+      labels: ["documentation"]
+      assignees: ["@beshr11"]
+
+  # Assign based on labels
+  label_rules:
+    - labels: ["security"]
+      assignees: ["@beshr11"]
+    
+    - labels: ["priority:critical"]
+      assignees: ["@beshr11"]
+
+# Issue triage workflow
+triage:
+  # Auto-close stale issues
+  stale:
+    enabled: true
+    days: 90
+    labels: ["stale"]
+    exempt_labels: ["priority:critical", "security"]
+    message: "This issue has been inactive for 90 days. It will be closed if no activity occurs within 7 days."
+  
+  # Auto-label based on templates
+  templates:
+    - name: "bug_report"
+      labels: ["bug"]
+    - name: "feature_request"
+      labels: ["enhancement"]
+
+# PR management
 pull_requests:
-  # Required checks before merge
-  required_checks:
-    - "lint"
-    - "test"
-    - "build"
+  # Require checks before merge
+  require_checks: true
   
-  # Auto-label PRs based on changes
-  auto_label:
-    - pattern: "*.test.ts"
-      labels: ["test"]
-    - pattern: "*.md"
-      labels: ["documentation"]
-    - pattern: "package.json"
-      labels: ["dependencies"]
+  # Auto-label PRs
+  labeling:
+    - pattern: "(?i)(fix|patch)"
+      labels: ["type:fix"]
+    - pattern: "(?i)(feat|feature)"
+      labels: ["type:feature"]
+    - pattern: "(?i)(docs|documentation)"
+      labels: ["type:docs"]
   
-  # Comment templates
-  comments:
-    welcome: |
-      ????? ??? ????????! ??
-      ?????? ??? PR ??????.
-      
-      Thank you for your contribution! I'll review this PR soon.
-    
-    needs_changes: |
-      ???? ????? ????????? ???????? ??? ?????.
-      Please make the requested changes before merging.
-
-# Issue templates
-issue_templates:
-  bug_report:
-    title: "Bug Report"
-    labels: ["bug", "needs-triage"]
-    body: |
-      ## Description
-      ??? ???? ?????
-      Clear description of the bug
-      
-      ## Steps to Reproduce
-      1. 
-      2. 
-      3. 
-      
-      ## Expected Behavior
-      ?? ??????? ?? ????
-      What should happen
-      
-      ## Actual Behavior
-      ?? ???? ??????
-      What actually happens
-      
-      ## Environment
-      - OS: 
-      - Browser/Version: 
-      - Node Version: 
-      
-      ## Additional Context
-      ?? ??????? ??????
-      Any additional information
-
-  feature_request:
-    title: "Feature Request"
-    labels: ["enhancement", "feature-request"]
-    body: |
-      ## Description
-      ??? ?????? ????????
-      Description of the requested feature
-      
-      ## Use Case
-      ????? ?????????
-      Use cases
-      
-      ## Proposed Solution
-      ???? ???????
-      Proposed solution
-
-# Response settings
-responses:
-  # Auto-respond to new issues
-  auto_respond: true
-  response_delay: "1h"  # Wait 1 hour before auto-response
-  
-  # Language preference
-  language: "ar-SA"  # Arabic (Saudi) as primary, English as fallback
+  # Comment on PRs with large changes
+  large_pr_threshold: 500
+  large_pr_message: "?? This PR has more than 500 line changes. Please consider breaking it into smaller PRs."
 
 # Notification settings
 notifications:
-  # Notify on critical issues
-  critical_issues: true
+  # Notify on high-priority issues
+  high_priority_mentions: true
+  
   # Notify on security issues
-  security_issues: true
-  # Notify on assignment
-  assignment: true
+  security_alert: true

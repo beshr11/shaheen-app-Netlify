@@ -2,81 +2,78 @@ name: Code Indexing (LSIF)
 
 on:
   push:
-    branches:
-      - main
-      - master
-      - develop
+    branches: [main, master]
   pull_request:
-    branches:
-      - main
-      - master
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
-  index:
-    name: Generate Code Index
+  generate-lsif:
+    name: Generate LSIF Index
     runs-on: ubuntu-latest
     
-    permissions:
-      contents: read
-      actions: read
-    
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history for better indexing
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
-      - name: Install LSIF TypeScript generator
+
+      - name: Setup TypeScript
         run: |
-          npm install -g @sourcegraph/lsif-typescript
-      
-      - name: Generate TypeScript index
-        run: |
-          lsif-tsc --version
-          lsif-tsc -p tsconfig.json || echo "No tsconfig.json found, skipping"
-      
-      - name: Upload LSIF index
+          npm install -g typescript
+          tsc --version
+
+      - name: Generate LSIF with Sourcegraph CLI
+        uses: sourcegraph/lsif-typescript-action@v1
+        with:
+          working-directory: .
+          output-file: ./data.lsif
+        continue-on-error: true  # Continue even if LSIF generation fails
+
+      - name: Upload LSIF artifact
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: lsif-index
-          path: |
-            dump.lsif
-            **/*.lsif
+          path: data.lsif
           retention-days: 7
-      
-      # Alternative: Upload to Sourcegraph (if configured)
-      # - name: Upload to Sourcegraph
-      #   if: env.SOURCEGRAPH_TOKEN != ''
-      #   run: |
-      #     curl -X POST \
-      #       -H "Authorization: token ${{ env.SOURCEGRAPH_TOKEN }}" \
-      #       -H "Content-Type: application/x-ndjson" \
-      #       --data-binary @dump.lsif \
-      #       "${{ env.SOURCEGRAPH_URL }}/.api/lsif/upload"
-      
-      - name: Generate codebase summary
+
+      # Alternative: Use GitHub Code Scanning with CodeQL
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript,typescript
+          queries: security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      # Generate codebase summary for context
+      - name: Generate Codebase Summary
         run: |
-          echo "# Codebase Summary" > codebase-summary.md
+          echo "## Codebase Summary" > codebase-summary.md
+          echo "Generated: $(date)" >> codebase-summary.md
           echo "" >> codebase-summary.md
-          echo "## Files" >> codebase-summary.md
-          find . -type f -name "*.ts" -o -name "*.tsx" | wc -l >> codebase-summary.md
+          echo "### Repository Structure" >> codebase-summary.md
+          find . -type f -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | head -20 >> codebase-summary.md
           echo "" >> codebase-summary.md
-          echo "## Dependencies" >> codebase-summary.md
+          echo "### Dependencies" >> codebase-summary.md
           cat package.json | grep -A 20 '"dependencies"' >> codebase-summary.md
-      
-      - name: Upload codebase summary
+
+      - name: Upload Codebase Summary
         uses: actions/upload-artifact@v4
         with:
           name: codebase-summary
           path: codebase-summary.md
-          retention-days: 30
