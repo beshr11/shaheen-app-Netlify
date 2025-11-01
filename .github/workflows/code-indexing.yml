@@ -1,0 +1,82 @@
+name: Code Indexing (LSIF)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  index:
+    name: Generate Code Index
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      actions: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better indexing
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install LSIF TypeScript generator
+        run: |
+          npm install -g @sourcegraph/lsif-typescript
+      
+      - name: Generate TypeScript index
+        run: |
+          lsif-tsc --version
+          lsif-tsc -p tsconfig.json || echo "No tsconfig.json found, skipping"
+      
+      - name: Upload LSIF index
+        uses: actions/upload-artifact@v4
+        with:
+          name: lsif-index
+          path: |
+            dump.lsif
+            **/*.lsif
+          retention-days: 7
+      
+      # Alternative: Upload to Sourcegraph (if configured)
+      # - name: Upload to Sourcegraph
+      #   if: env.SOURCEGRAPH_TOKEN != ''
+      #   run: |
+      #     curl -X POST \
+      #       -H "Authorization: token ${{ env.SOURCEGRAPH_TOKEN }}" \
+      #       -H "Content-Type: application/x-ndjson" \
+      #       --data-binary @dump.lsif \
+      #       "${{ env.SOURCEGRAPH_URL }}/.api/lsif/upload"
+      
+      - name: Generate codebase summary
+        run: |
+          echo "# Codebase Summary" > codebase-summary.md
+          echo "" >> codebase-summary.md
+          echo "## Files" >> codebase-summary.md
+          find . -type f -name "*.ts" -o -name "*.tsx" | wc -l >> codebase-summary.md
+          echo "" >> codebase-summary.md
+          echo "## Dependencies" >> codebase-summary.md
+          cat package.json | grep -A 20 '"dependencies"' >> codebase-summary.md
+      
+      - name: Upload codebase summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: codebase-summary
+          path: codebase-summary.md
+          retention-days: 30

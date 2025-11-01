@@ -1,0 +1,134 @@
+# Cloud Agent Configuration for Cursor/Beshr11
+# This file configures AI agent behavior and permissions
+
+# Agent identity
+agent:
+  name: "beshr11-cloud-agent"
+  version: "1.0.0"
+  description: "AI agent for beshr11 repositories"
+
+# Repository access
+repository:
+  # Allowed repositories (use "*" for all repos in org)
+  allowed_repos:
+    - "*"  # Access all repos in beshr11 org
+  
+  # Permissions
+  permissions:
+    read_code: true
+    read_issues: true
+    read_prs: true
+    write_code: true  # Can create commits and PRs
+    write_issues: true
+    write_prs: true
+    write_comments: true
+
+# Code context settings
+code_context:
+  # Enable enhanced code intelligence
+  enable_lsif: true
+  enable_code_search: true
+  
+  # File patterns to index
+  index_patterns:
+    - "**/*.ts"
+    - "**/*.tsx"
+    - "**/*.js"
+    - "**/*.jsx"
+    - "**/*.json"
+    - "**/*.md"
+    - "**/*.yml"
+    - "**/*.yaml"
+  
+  # Exclude patterns
+  exclude_patterns:
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/.git/**"
+    - "**/coverage/**"
+
+# Agent behavior
+behavior:
+  # Auto-fix issues
+  auto_fix:
+    enabled: true
+    create_pr: true  # Create PR instead of direct commit
+    require_review: true
+  
+  # Code generation
+  code_generation:
+    enabled: true
+    test_coverage: true  # Generate tests with code
+    documentation: true  # Generate docs with code
+  
+  # PR creation
+  pr_creation:
+    enabled: true
+    auto_assign: true
+    add_labels: true
+    draft_mode: false  # Create as draft PRs
+  
+  # Issue management
+  issue_management:
+    enabled: true
+    auto_triage: true
+    auto_label: true
+    auto_assign: true
+
+# Language preferences
+language:
+  primary: "ar-SA"  # Arabic (Saudi) for user communication
+  code: "en-US"     # English for code and technical docs
+  timezone: "Asia/Riyadh"  # UTC+3
+
+# Code quality rules
+code_quality:
+  # Linting
+  lint_on_save: true
+  lint_rules:
+    - "eslint"
+    - "typescript"
+  
+  # Formatting
+  format_on_save: true
+  formatter: "prettier"
+  
+  # Testing
+  require_tests: true
+  test_threshold: 80  # Minimum test coverage %
+  
+  # Security
+  security_scan: true
+  dependency_check: true
+
+# Workflow integration
+workflows:
+  # Trigger on events
+  triggers:
+    - event: "push"
+      action: "analyze"
+    - event: "pull_request"
+      action: "review"
+    - event: "issue"
+      action: "triage"
+  
+  # CI/CD integration
+  ci:
+    run_tests: true
+    run_lint: true
+    run_build: true
+    check_security: true
+
+# Limits and quotas
+limits:
+  max_prs_per_day: 10
+  max_commits_per_day: 50
+  max_issues_per_day: 20
+  max_file_size: "10MB"  # Skip files larger than this
+
+# Logging
+logging:
+  level: "info"  # debug, info, warn, error
+  log_actions: true
+  log_errors: true
