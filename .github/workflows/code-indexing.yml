@@ -1,0 +1,79 @@
+name: Code Indexing (LSIF)
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  generate-lsif:
+    name: Generate LSIF Index
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better indexing
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup TypeScript
+        run: |
+          npm install -g typescript
+          tsc --version
+
+      - name: Generate LSIF with Sourcegraph CLI
+        uses: sourcegraph/lsif-typescript-action@v1
+        with:
+          working-directory: .
+          output-file: ./data.lsif
+        continue-on-error: true  # Continue even if LSIF generation fails
+
+      - name: Upload LSIF artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lsif-index
+          path: data.lsif
+          retention-days: 7
+
+      # Alternative: Use GitHub Code Scanning with CodeQL
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript,typescript
+          queries: security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      # Generate codebase summary for context
+      - name: Generate Codebase Summary
+        run: |
+          echo "## Codebase Summary" > codebase-summary.md
+          echo "Generated: $(date)" >> codebase-summary.md
+          echo "" >> codebase-summary.md
+          echo "### Repository Structure" >> codebase-summary.md
+          find . -type f -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | head -20 >> codebase-summary.md
+          echo "" >> codebase-summary.md
+          echo "### Dependencies" >> codebase-summary.md
+          cat package.json | grep -A 20 '"dependencies"' >> codebase-summary.md
+
+      - name: Upload Codebase Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: codebase-summary
+          path: codebase-summary.md

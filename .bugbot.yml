@@ -1,0 +1,93 @@
+# Bugbot Configuration for beshr11 repositories
+# This file configures automated issue triage, labeling, and assignment
+
+# Auto-labeling rules
+labeling:
+  # Label issues based on title/content patterns
+  rules:
+    - pattern: "(?i)(bug|error|crash|exception|fail)"
+      labels: ["bug", "needs-triage"]
+      priority: "high"
+    
+    - pattern: "(?i)(feature|enhancement|improvement|add)"
+      labels: ["enhancement", "feature-request"]
+      priority: "medium"
+    
+    - pattern: "(?i)(documentation|docs|readme|guide)"
+      labels: ["documentation"]
+      priority: "low"
+    
+    - pattern: "(?i)(security|vulnerability|exploit)"
+      labels: ["security", "priority:critical"]
+      priority: "critical"
+      assignees: ["@beshr11"]
+    
+    - pattern: "(?i)(performance|slow|optimization)"
+      labels: ["performance"]
+      priority: "medium"
+
+# Auto-assignment rules
+assignment:
+  # Assign based on file paths changed in PR
+  path_rules:
+    - paths: ["netlify/**", "*.toml"]
+      assignees: ["@beshr11"]
+      labels: ["infrastructure"]
+    
+    - paths: ["**/*.ts", "**/*.tsx"]
+      labels: ["typescript"]
+    
+    - paths: ["**/*.md", "docs/**"]
+      labels: ["documentation"]
+      assignees: ["@beshr11"]
+
+  # Assign based on labels
+  label_rules:
+    - labels: ["security"]
+      assignees: ["@beshr11"]
+    
+    - labels: ["priority:critical"]
+      assignees: ["@beshr11"]
+
+# Issue triage workflow
+triage:
+  # Auto-close stale issues
+  stale:
+    enabled: true
+    days: 90
+    labels: ["stale"]
+    exempt_labels: ["priority:critical", "security"]
+    message: "This issue has been inactive for 90 days. It will be closed if no activity occurs within 7 days."
+  
+  # Auto-label based on templates
+  templates:
+    - name: "bug_report"
+      labels: ["bug"]
+    - name: "feature_request"
+      labels: ["enhancement"]
+
+# PR management
+pull_requests:
+  # Require checks before merge
+  require_checks: true
+  
+  # Auto-label PRs
+  labeling:
+    - pattern: "(?i)(fix|patch)"
+      labels: ["type:fix"]
+    - pattern: "(?i)(feat|feature)"
+      labels: ["type:feature"]
+    - pattern: "(?i)(docs|documentation)"
+      labels: ["type:docs"]
+  
+  # Comment on PRs with large changes
+  large_pr_threshold: 500
+  large_pr_message: "?? This PR has more than 500 line changes. Please consider breaking it into smaller PRs."
+
+# Notification settings
+notifications:
+  # Notify on high-priority issues
+  high_priority_mentions: true
+  
+  # Notify on security issues
+  security_alert: true

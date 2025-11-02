@@ -1,0 +1,116 @@
+# Cursor Cloud Agent Configuration
+# This file configures how Cursor agents interact with your repository
+
+version: "1.0"
+
+# Repository context settings
+context:
+  # Enable enhanced codebase context
+  enhanced_context: true
+  
+  # Include these patterns in context
+  include_patterns:
+    - "**/*.ts"
+    - "**/*.tsx"
+    - "**/*.js"
+    - "**/*.jsx"
+    - "**/*.json"
+    - "**/*.toml"
+    - "**/*.yml"
+    - "**/*.yaml"
+    - "**/*.md"
+  
+  # Exclude these patterns from context
+  exclude_patterns:
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/.git/**"
+    - "**/coverage/**"
+  
+  # Maximum file size to include (in KB)
+  max_file_size_kb: 500
+
+# Agent capabilities
+capabilities:
+  # Can agents create commits?
+  create_commits: true
+  
+  # Can agents open PRs?
+  create_pull_requests: true
+  
+  # Can agents comment on issues/PRs?
+  comment: true
+  
+  # Can agents label issues/PRs?
+  label: true
+  
+  # Can agents assign issues?
+  assign: true
+
+# PR creation settings
+pull_requests:
+  # Default branch for PRs
+  base_branch: "main"
+  
+  # Auto-draft PRs for large changes
+  draft_for_large_changes: true
+  large_change_threshold: 500
+  
+  # Required labels
+  required_labels: []
+  
+  # Auto-request reviewers
+  auto_request_reviewers: false
+  default_reviewers: []
+
+# Issue management
+issues:
+  # Auto-label issues created by agents
+  auto_label: true
+  
+  # Default labels for agent-created issues
+  default_labels: ["agent-generated"]
+  
+  # Link PRs to issues automatically
+  link_prs: true
+
+# Security settings
+security:
+  # Require approval for sensitive changes
+  require_approval_for:
+    - "**/.github/workflows/**"
+    - "**/netlify.toml"
+    - "**/package.json"
+    - "**/package-lock.json"
+  
+  # Block changes to these files
+  blocked_files:
+    - ".env"
+    - "**/*.secret"
+    - "**/*.key"
+
+# Code indexing
+indexing:
+  # Enable LSIF indexing
+  lsif_enabled: true
+  
+  # Update index on push
+  update_on_push: true
+  
+  # Index languages
+  languages:
+    - typescript
+    - javascript
+    - json
+    - markdown
+
+# Notification settings
+notifications:
+  # Notify on agent actions
+  notify_on_commit: false
+  notify_on_pr: true
+  notify_on_issue: true
+  
+  # Notification channels
+  channels: []

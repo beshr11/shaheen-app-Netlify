@@ -1,0 +1,30 @@
+{
+  "name": "Cursor Cloud Agents & Bugbot",
+  "url": "https://cursor.sh",
+  "hook_attributes": {
+    "url": "https://your-webhook-endpoint.com/github/webhook"
+  },
+  "redirect_url": "https://cursor.sh/github/callback",
+  "callback_urls": [
+    "https://cursor.sh/github/callback"
+  ],
+  "description": "GitHub App for Cursor Cloud Agents, Bugbot, and enhanced codebase context",
+  "public": false,
+  "default_permissions": {
+    "actions": "read",
+    "checks": "write",
+    "contents": "write",
+    "issues": "write",
+    "metadata": "read",
+    "pull_requests": "write"
+  },
+  "default_events": [
+    "push",
+    "pull_request",
+    "issues",
+    "issue_comment",
+    "workflow_run",
+    "check_run",
+    "check_suite"
+  ]
+}

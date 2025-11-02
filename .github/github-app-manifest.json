@@ -1,0 +1,32 @@
+{
+  "name": "beshr11-cloud-agents",
+  "url": "https://github.com/beshr11",
+  "hook_attributes": {
+    "url": "https://your-webhook-endpoint.netlify.app/.netlify/functions/github-webhook",
+    "active": true
+  },
+  "redirect_url": "https://your-app-redirect-url.com",
+  "public": false,
+  "default_permissions": {
+    "actions": "read",
+    "checks": "write",
+    "contents": "write",
+    "issues": "write",
+    "metadata": "read",
+    "pull_requests": "write",
+    "repository_projects": "read",
+    "statuses": "write"
+  },
+  "default_events": [
+    "push",
+    "pull_request",
+    "issues",
+    "issue_comment",
+    "workflow_run",
+    "repository"
+  ],
+  "description": "GitHub App for Cloud Agents, Bugbot, and enhanced codebase context in beshr11 organization",
+  "callback_urls": [
+    "https://your-app-redirect-url.com/auth/callback"
+  ]
+}
